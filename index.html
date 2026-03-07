@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description"
+    content="AllergyGuardIN — Detect allergens in Indian foods instantly. Manage your allergy profile, scan foods, and stay safe with our free, privacy-first tool." />
+  <meta name="keywords"
+    content="Indian food allergy detector, allergen checker, food safety India, peanut allergy, gluten free Indian food" />
+  <meta name="author" content="AllergyGuardIN" />
+  <meta property="og:title" content="AllergyGuardIN – Indian Food Allergy Detector" />
+  <meta property="og:description"
+    content="Detect allergens in Indian foods instantly. 100% free, works offline, no account required." />
+  <meta property="og:type" content="website" />
+  <title>AllergyGuardIN – Indian Food Allergy Detector</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"
+    rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+  <!-- PDF.js for reading PDF food labels -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+</head>
+
+<body>
+
+  <!-- Sidebar -->
+  <aside class="sidebar" id="sidebar">
+    <div class="logo logo-clickable" onclick="showPage('dashboard')" title="Go to Dashboard" role="button" tabindex="0"
+      onkeydown="if(event.key==='Enter'||event.key===' ')showPage('dashboard')">
+      <span class="logo-icon">🍛</span>
+      <span class="logo-text">AllergyGuard<span class="logo-dot">IN</span></span>
+    </div>
+    <nav class="nav">
+      <a class="nav-item active" id="nav-dashboard" data-page="dashboard" onclick="showPage('dashboard')">
+        <span class="nav-icon">📊</span><span>Dashboard</span>
+      </a>
+      <a class="nav-item" id="nav-scanner" data-page="scanner" onclick="showPage('scanner')">
+        <span class="nav-icon">📷</span><span>Food Scanner</span>
+      </a>
+      <a class="nav-item" id="nav-profile" data-page="profile" onclick="showPage('profile')">
+        <span class="nav-icon">👤</span><span>Allergy Profile</span>
+      </a>
+      <a class="nav-item" id="nav-history" data-page="history" onclick="showPage('history')">
+        <span class="nav-icon">📋</span><span>History</span>
+      </a>
+      <a class="nav-item" id="nav-foods" data-page="foods" onclick="showPage('foods')">
+        <span class="nav-icon">🥘</span><span>Food Database</span>
+      </a>
+    </nav>
+    <div class="sidebar-footer">
+      <div class="user-card">
+        <div class="user-avatar" id="sidebarAvatar">R</div>
+        <div>
+          <div class="user-name" id="sidebarName">Rahul Kumar</div>
+          <div class="user-status">🟢 Protected</div>
+        </div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- Main Content -->
+  <main class="main" id="main">
+    <!-- Topbar -->
+    <header class="topbar">
+      <button class="menu-btn" id="menuBtn" onclick="toggleSidebar()" aria-label="Toggle sidebar">☰</button>
+      <div class="topbar-title" id="pageTitle">Dashboard</div>
+      <div class="topbar-right">
+        <div class="alert-badge" id="alertBadge" title="Active alerts">
+          <span>🔔</span><span class="badge-count" id="badgeCount">0</span>
+        </div>
+        <div class="time-display" id="timeDisplay"></div>
+      </div>
+    </header>
+
+    <!-- ==================== DASHBOARD PAGE ==================== -->
+    <div class="page active" id="page-dashboard">
+      <div class="page-header">
+        <h1>Welcome back, <span class="highlight" id="dashGreetName">Rahul</span> 👋</h1>
+        <p class="subtitle">Here's your food safety overview for today</p>
+      </div>
+      <div class="stats-grid">
+        <div class="stat-card safe">
+          <div class="stat-icon">✅</div>
+          <div class="stat-value" id="safeCount">0</div>
+          <div class="stat-label">Safe Scans Today</div>
+          <div class="stat-trend" id="safeTrend">No scans yet today</div>
+        </div>
+        <div class="stat-card danger">
+          <div class="stat-icon">⚠️</div>
+          <div class="stat-value" id="alertCount">0</div>
+          <div class="stat-label">Allergy Alerts Today</div>
+          <div class="stat-trend">Active allergens detected</div>
+        </div>
+        <div class="stat-card info">
+          <div class="stat-icon">🔍</div>
+          <div class="stat-value" id="scanCount">0</div>
+          <div class="stat-label">Total Scans</div>
+          <div class="stat-trend">All time</div>
+        </div>
+        <div class="stat-card warning">
+          <div class="stat-icon">🌶️</div>
+          <div class="stat-value" id="allergenCount">0</div>
+          <div class="stat-label">Active Allergens</div>
+          <div class="stat-trend">In your profile</div>
+        </div>
+      </div>
+
+      <div class="dashboard-grid">
+        <div class="card recent-scans">
+          <div class="card-header">
+            <h2>Recent Scans</h2>
+            <button class="btn-link" onclick="showPage('history')">View All →</button>
+          </div>
+          <div class="scan-list" id="recentScanList"></div>
+        </div>
+        <div class="card allergen-chart">
+          <div class="card-header">
+            <h2>Your Allergen Profile</h2>
+          </div>
+          <div class="allergen-bars" id="allergenBars"></div>
+        </div>
+      </div>
+
+      <div class="card alerts-card">
+        <div class="card-header">
+          <h2>🚨 Active Alerts</h2>
+        </div>
+        <div class="alerts-list" id="alertsList"></div>
+      </div>
+    </div>
+
+    <!-- ==================== SCANNER PAGE ==================== -->
+    <div class="page" id="page-scanner">
+      <div class="page-header">
+        <h1>📷 Food Scanner</h1>
+        <p class="subtitle">Scan food with your camera, upload an image or PDF label to detect allergens</p>
+      </div>
+
+      <!-- Scanner Mode Tabs -->
+      <div class="scanner-tabs" id="scannerTabs">
+        <button class="scanner-tab active" id="tabCamera" onclick="switchScannerTab('camera')">📷 Camera</button>
+        <button class="scanner-tab" id="tabUpload" onclick="switchScannerTab('upload')">📁 Upload File</button>
+      </div>
+
+      <div class="scanner-layout">
+        <!-- ---- CAMERA PANEL ---- -->
+        <div class="card camera-card" id="panelCamera">
+          <div class="camera-wrapper" id="cameraWrapper">
+            <video id="videoFeed" autoplay playsinline></video>
+            <canvas id="captureCanvas" style="display:none"></canvas>
+            <div class="camera-overlay" id="cameraOverlay">
+              <div class="scan-frame">
+                <div class="corner tl"></div>
+                <div class="corner tr"></div>
+                <div class="corner bl"></div>
+                <div class="corner br"></div>
+              </div>
+              <div class="scan-line" id="scanLine"></div>
+              <p class="scan-tip" id="scanTip">Click "Start Camera" to begin</p>
+            </div>
+            <img id="capturedImg" class="captured-img" style="display:none" alt="Captured food" />
+          </div>
+          <div class="camera-controls">
+            <button class="btn btn-primary" id="startCamBtn" onclick="startCamera()">📷 Start Camera</button>
+            <button class="btn btn-danger" id="stopCamBtn" onclick="stopCamera()" style="display:none">⏹ Stop</button>
+            <button class="btn btn-success" id="captureBtn" onclick="captureFrame()" style="display:none">🔍 Analyse
+              Food</button>
+            <button class="btn btn-secondary" id="retryBtn" onclick="retryCamera()" style="display:none">🔄
+              Retry</button>
+          </div>
+          <div class="manual-input">
+            <p>Or type food name manually:</p>
+            <div class="input-row">
+              <input type="text" id="foodInput" class="food-text-input"
+                placeholder="e.g. Butter Chicken, Paneer Tikka..."
+                onkeydown="if(event.key==='Enter') analyseManual()" />
+              <button class="btn btn-primary" onclick="analyseManual()">Analyse</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- ---- UPLOAD PANEL ---- -->
+        <div class="card upload-card" id="panelUpload" style="display:none">
+          <!-- Drop Zone -->
+          <div class="upload-dropzone" id="uploadDropzone" onclick="document.getElementById('fileUploadInput').click()"
+            ondragover="handleDragOver(event)" ondragleave="handleDragLeave(event)" ondrop="handleFileDrop(event)">
+            <div class="upload-icon">📂</div>
+            <p class="upload-main-text">Drag &amp; drop your file here</p>
+            <p class="upload-sub-text">Supports: JPG, PNG, WEBP, GIF, PDF</p>
+            <button class="btn btn-primary upload-browse-btn"
+              onclick="event.stopPropagation(); document.getElementById('fileUploadInput').click()">Browse File</button>
+            <input type="file" id="fileUploadInput" accept="image/*,.pdf" style="display:none"
+              onchange="handleFileSelect(event)" />
+          </div>
+
+          <!-- Preview Area (hidden until file selected) -->
+          <div class="upload-preview-area" id="uploadPreviewArea" style="display:none">
+            <div class="upload-preview-header">
+              <div class="upload-file-info" id="uploadFileInfo"></div>
+              <button class="btn btn-secondary btn-sm" onclick="clearUpload()">✕ Clear</button>
+            </div>
+            <div class="upload-preview-content" id="uploadPreviewContent"></div>
+            <button class="btn btn-primary upload-analyse-btn" id="uploadAnalyseBtn" onclick="analyseUploadedFile()">
+              🔍 Analyse for Allergens
+            </button>
+            <div class="upload-progress" id="uploadProgress" style="display:none">
+              <div class="upload-progress-bar" id="uploadProgressBar"></div>
+              <p class="upload-progress-text" id="uploadProgressText">Analysing...</p>
+            </div>
+          </div>
+
+          <!-- Supported formats guide -->
+          <div class="upload-guide">
+            <div class="upload-guide-item">
+              <span>🖼️</span>
+              <div>
+                <strong>Image Files</strong>
+                <span>Upload a photo of the food or its packaging label</span>
+              </div>
+            </div>
+            <div class="upload-guide-item">
+              <span>📄</span>
+              <div>
+                <strong>PDF Files</strong>
+                <span>Upload a PDF menu, recipe, or food label — we'll extract the text and check for allergens</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card result-card" id="resultCard" style="display:none">
+          <div class="result-header" id="resultHeader"></div>
+          <div class="result-body" id="resultBody"></div>
+          <button class="btn btn-secondary" style="margin-top:.5rem"
+            onclick="document.getElementById('resultCard').style.display='none'">✕ Close</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ==================== PROFILE PAGE ==================== -->
+    <div class="page" id="page-profile">
+      <div class="page-header">
+        <h1>👤 Allergy Profile</h1>
+        <p class="subtitle">Manage your personal allergen settings</p>
+      </div>
+      <div class="profile-grid">
+        <div class="card profile-info-card">
+          <div class="profile-avatar-large" id="profileAvatar">R</div>
+          <h2 id="profileName">Rahul Kumar</h2>
+          <p class="profile-email" id="profileEmail">rahul@example.com</p>
+
+          <!-- Edit profile form -->
+          <div id="editProfileForm" class="edit-profile-form" style="display:none">
+            <input type="text" id="editName" class="food-text-input" placeholder="Your name" />
+            <input type="email" id="editEmail" class="food-text-input" placeholder="Your email" />
+            <div class="form-btns">
+              <button class="btn btn-success btn-sm" onclick="saveProfile()">Save</button>
+              <button class="btn btn-secondary btn-sm" onclick="toggleEditProfile()">Cancel</button>
+            </div>
+          </div>
+          <button class="btn btn-secondary btn-sm" id="editProfileBtn" onclick="toggleEditProfile()"
+            style="margin:0 auto .75rem">✏️ Edit Profile</button>
+
+          <div class="profile-stats">
+            <div><strong id="profileAllergenCount">0</strong><span>Allergens</span></div>
+            <div><strong id="profileScanCount">0</strong><span>Total Scans</span></div>
+            <div><strong id="profileSafeCount">0</strong><span>Safe Today</span></div>
+          </div>
+          <div class="severity-guide">
+            <h3>Severity Guide</h3>
+            <div class="sev-item"><span class="sev-dot high"></span>High Risk</div>
+            <div class="sev-item"><span class="sev-dot med"></span>Medium Risk</div>
+            <div class="sev-item"><span class="sev-dot low"></span>Low Risk</div>
+          </div>
+        </div>
+
+        <div class="card allergens-manager">
+          <div class="card-header">
+            <h2>My Allergens</h2>
+            <button class="btn btn-primary btn-sm" onclick="showAddAllergen()">+ Add</button>
+          </div>
+          <div id="allergenList" class="allergen-list"></div>
+          <div id="addAllergenForm" class="add-allergen-form" style="display:none">
+            <div class="search-box-wrapper" style="width:100%;position:relative;margin-bottom:.75rem">
+              <input type="text" id="allergenSearchInput" class="food-text-input"
+                placeholder="🔍 Search allergen (e.g. Peanut, Milk...)" oninput="searchAllergenInput(this.value)"
+                autocomplete="off" />
+              <div id="allergenSearchResults" class="search-results-overlay" style="display:none"></div>
+            </div>
+            <input type="hidden" id="selectedAllergenName" />
+            <select id="newAllergenSev" class="form-select">
+              <option value="high">High Risk</option>
+              <option value="med">Medium Risk</option>
+              <option value="low">Low Risk</option>
+            </select>
+            <div class="form-btns">
+              <button class="btn btn-success btn-sm" onclick="addAllergen()">Save</button>
+              <button class="btn btn-secondary btn-sm" onclick="hideAddAllergen()">Cancel</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <!-- ==================== HISTORY PAGE ==================== -->
+    <div class="page" id="page-history">
+      <div class="page-header">
+        <h1>📋 Scan History</h1>
+        <p class="subtitle">All your previous food scans</p>
+      </div>
+      <div class="card">
+        <div class="card-header">
+          <input type="text" class="search-input" id="historySearch" placeholder="🔍 Search foods..."
+            oninput="filterHistory(this.value)" />
+          <select class="form-select" id="historyStatusFilter" onchange="filterHistoryStatus(this.value)">
+            <option value="all">All</option>
+            <option value="safe">Safe</option>
+            <option value="danger">Danger</option>
+            <option value="caution">Caution</option>
+          </select>
+        </div>
+        <div style="display:flex;justify-content:flex-end;margin-bottom:.75rem">
+          <button class="btn btn-danger btn-sm" onclick="clearHistory()">🗑️ Clear History</button>
+        </div>
+        <div id="historyList" class="history-list"></div>
+      </div>
+    </div>
+
+    <!-- ==================== FOOD DATABASE PAGE ==================== -->
+    <div class="page" id="page-foods">
+      <div class="page-header">
+        <h1>🥘 Indian Food Database</h1>
+        <p class="subtitle">Browse common Indian foods and their allergens</p>
+      </div>
+      <div class="food-search-bar">
+        <input type="text" class="search-input full" id="foodDbSearch" placeholder="🔍 Search Indian foods..."
+          oninput="filterFoods(this.value)" />
+      </div>
+      <div class="food-grid" id="foodGrid"></div>
+    </div>
+
+  </main>
+  <!-- Overlay for mobile sidebar -->
+  <div class="sidebar-overlay" id="sidebarOverlay" onclick="closeSidebar()"></div>
+  <script src="app.js"></script>
+</body>
+
+</html>
